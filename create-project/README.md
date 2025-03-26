@@ -1,5 +1,5 @@
 env: node@22.14.0
 
-cmd: setup-project --src
+cmd: suproj --src
 
 desc: Creates a specific project structure within a directory
