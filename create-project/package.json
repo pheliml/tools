@@ -11,6 +11,9 @@
   "license": "ISC",
   "type": "commonjs",
   "bin": {
-	"setup-project": "./index.js"
+    "setup-project": "./index.js"
+  },
+  "dependencies": {
+    "yargs": "^17.7.2"
   }
 }
