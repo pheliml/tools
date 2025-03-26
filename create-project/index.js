@@ -6,25 +6,35 @@ const argv = yargs(hideBin(process.argv)).argv
 
 let projectStructure = {}
 
-if(argv.src)
-{
-	projectStructure = {
-		'src': [`${argv.src}.js`],
-		'public': ['index.html', 'styles.css']
-	}
-} else {
+function createJsProj(projectStructure) {
 
-	projectStructure = {
-		'src': ['index.js'],
-		'public': ['index.html', 'styles.css']
+	if (argv.src)
+	{
+		projectStructure = {
+			'src': [`${argv.src}.js`],
+			'public': ['index.html', 'styles.css']
+		}
+	} else {
+
+		projectStructure = {
+			'src': ['index.js'],
+			'public': ['index.html', 'styles.css']
+		}
 	}
+
+	Object.entries(projectStructure).forEach(([dir, files]) => {
+	fs.mkdirSync(dir, { recursive: true });
+	files.forEach(file => fs.writeFileSync(`${dir}/${file}`, ''));
+	});
+
+
+	console.log("Project structure created successfully!");
 }
 
-Object.entries(projectStructure).forEach(([dir, files]) => {
-fs.mkdirSync(dir, { recursive: true });
-files.forEach(file => fs.writeFileSync(`${dir}/${file}`, ''));
-});
-
-
-console.log("Project structure created successfully!");
-
+if (argv.lang)
+{
+	createJsProj(projectStructure)
+} else {
+	console.log("argument --lang required");
+}
+	
