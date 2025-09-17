@@ -110,8 +110,12 @@ vim.opt.foldmethod = "marker"
 -- 
 -- Key mapping: Ctrl+x Ctrl+j to convert keys to JSON-style quoted strings
 vim.api.nvim_set_keymap("n", "<C-x><C-j>", [[:%s/[ \t]\([A-Za-z_].*\):/"\1":<CR>]], { noremap = true, silent = true })
+-- Format JSON with jq (whole buffer)
+vim.keymap.set('n', '<leader>q', '<Cmd> %!jq .<CR>', { noremap = true, silent = true })
+
 vim.api.nvim_set_keymap('n', '<leader>ff', "<cmd>lua require('fzf-lua').files()<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>fg', "<cmd>lua require('fzf-lua').live_grep()<CR>", { noremap = true, silent = true })
+
 -- source lua on space rl
 vim.api.nvim_set_keymap('n', '<leader>rl', ':luafile ~/.config/nvim/init.lua<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>t', '<cmd>ToggleTerm<CR>', { noremap = true, silent = true })
