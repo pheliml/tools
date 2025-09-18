@@ -34,6 +34,53 @@ static void *main_init(struct fuse_conn_info *conn, struct fuse_config *cfg)
 	return NULL;
 }
 
+static int main_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
+{
+	(void) fi;
+	int res = 0;
+
+	memset(stbuf, 0, sizeof(struct stat));
+	if (strcmp(path, "/") == 0) {
+		stbuf->st_mode = S_IFDIR | 0755;
+		stbuf->st_nlink = 2;
+	} else if (strcmp(path+1, options.filename) == 0) {
+			stbuf->st_mode = S_IFREG | 0444;
+			stbuf->st_nlink = 1;
+			stbuf->st_size = strlen(options.contents);
+	  } else
+	  		res = -ENOENT;
+
+	return res;
+}
+
+static int main_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+			off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags)
+{
+	(void) offset;
+	(void) fi;
+	(void) flags;
+
+	if (strcmp(path, "/") != 0)
+		return -ENOENT;
+	
+	filler(buf, ".", NULL, 0, FUSE_FILL_DIR_DEFAULTS);
+	filler(buf, "..", NULL, 0, FUSE_FILL_DIR_DEFAULTS);
+	filler(buf, options.filename, NULL, 0, FUSE_FILL_DIR_DEFAULTS);
+
+	return 0;
+}
+
+static int main_open(const char *path, struct fuse_file_info *fi)
+{
+	if(strcmp(path+1, options.filename) != 0)
+		return -ENOENT;
+
+	if ((fi->flags & O_ACCMODE) != O_RDONLY)
+		return -EACCES;
+
+	return 0;
+}
+
 static void show_help(const char *progname) { 
 	printf("usage: %s [options] <mountpoint>\n\n", progname); 
 	printf("filesystem specific options:\n" 
@@ -45,6 +92,9 @@ static void show_help(const char *progname) {
 
 static const struct fuse_operations main_oper = {
 	.init = main_init,
+	.getattr = main_getattr,
+	.readdir = main_readdir,
+	.open = main_open,
 };
 
 int main(int argc, char *argv[])
