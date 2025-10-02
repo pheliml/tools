@@ -81,6 +81,25 @@ static int main_open(const char *path, struct fuse_file_info *fi)
 	return 0;
 }
 
+static int main_read(const char *path, char *buf, size_t size, off_t offset,
+		struct fuse_file_info *fi)
+{
+	size_t len;
+	(void) fi;
+	if(strcmp(path+1, options.filename) != 0)
+		return -ENOENT;
+
+	len = strlen(options.contents);
+	if(offset < len) {
+		if(offset + size > len)
+			size = len - offset;
+		memcpy(buf, options.contents + offset, size);
+	} else
+		size = 0;
+
+	return size;
+}
+
 static void show_help(const char *progname) { 
 	printf("usage: %s [options] <mountpoint>\n\n", progname); 
 	printf("filesystem specific options:\n" 
@@ -95,6 +114,7 @@ static const struct fuse_operations main_oper = {
 	.getattr = main_getattr,
 	.readdir = main_readdir,
 	.open = main_open,
+	.read = main_read,
 };
 
 int main(int argc, char *argv[])
