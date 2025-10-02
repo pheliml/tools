@@ -100,6 +100,16 @@ static int main_read(const char *path, char *buf, size_t size, off_t offset,
 	return size;
 }
 
+static int main_mkdir(const char *path, mode_t mode) 
+{
+	if(strcmp(path, "/") == 0)
+		return -EEXIST;
+
+	// For now only allow directory under root
+	if(path[0] != "/" || strchr(path+1, "/") != NULL)
+			return -ENOENT;
+}
+
 static void show_help(const char *progname) { 
 	printf("usage: %s [options] <mountpoint>\n\n", progname); 
 	printf("filesystem specific options:\n" 
