@@ -106,8 +106,10 @@ static int main_mkdir(const char *path, mode_t mode)
 		return -EEXIST;
 
 	// For now only allow directory under root
-	if(path[0] != "/" || strchr(path+1, "/") != NULL)
+	if(path[0] != '/' || strchr(path + 1, '/') != NULL)
 			return -ENOENT;
+
+	return 0;
 }
 
 static void show_help(const char *progname) { 
@@ -125,6 +127,7 @@ static const struct fuse_operations main_oper = {
 	.readdir = main_readdir,
 	.open = main_open,
 	.read = main_read,
+	.mkdir = main_mkdir,
 };
 
 int main(int argc, char *argv[])
