@@ -8,37 +8,39 @@
 #include <stddef.h>
 #include <assert.h>
 #include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 typedef enum {
-	DIR,
-	FILE,
-} type_t
+	FS_DIR,
+	FS_FILE,
+} fs_type_t;
 
-typedef struct node {
+typedef struct fs_node {
 	char name[256];
-	type_t type;
+	fs_type_t type;
 	mode_t mode;
 	uid_t uid;
-	time mtime;
+	time_t mtime;
 
 	// Pointer to any child nodes
 	// For now nested dirs are not supported
-	struct node *children;
+	struct fs_node *children;
 
 	// Linked list
-	struct node *next;
+	struct fs_node *next;
 } node_t;
 
 // Global pointer to root dir node
 node_t *fs_root = NULL;
 
-node_t node_malloc_helper(const char *name, mode_t mode) {
+node_t *node_malloc_helper(const char *name, mode_t mode) {
 	node_t *new_node = malloc(sizeof(node_t));
 	if (!new_node) return NULL;
 
 	// Init node
 	strncpy(new_node-> name, name, 255);
-	new_node-> type = DIR;
+	new_node-> type = FS_DIR;
 	new_node-> type = mode | S_IFDIR; // Directory type (0th bit index?)
 	new_node-> mtime = time(NULL);
 	new_node-> uid = geteuid();
