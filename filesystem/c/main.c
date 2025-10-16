@@ -7,6 +7,47 @@
 #include <fcntl.h>
 #include <stddef.h>
 #include <assert.h>
+#include <time.h>
+
+typedef enum {
+	DIR,
+	FILE,
+} type_t
+
+typedef struct node {
+	char name[256];
+	type_t type;
+	mode_t mode;
+	uid_t uid;
+	time mtime;
+
+	// Pointer to any child nodes
+	// For now nested dirs are not supported
+	struct node *children;
+
+	// Linked list
+	struct node *next;
+} node_t;
+
+// Global pointer to root dir node
+node_t *fs_root = NULL;
+
+node_t node_malloc_helper(const char *name, mode_t mode) {
+	node_t *new_node = malloc(sizeof(node_t));
+	if (!new_node) return NULL;
+
+	// Init node
+	strncpy(new_node-> name, name, 255);
+	new_node-> type = DIR;
+	new_node-> type = mode | S_IFDIR; // Directory type (0th bit index?)
+	new_node-> mtime = time(NULL);
+	new_node-> uid = geteuid();
+
+	new_node-> children = NULL;
+	new_node-> next = NULL;
+
+	return new_node;
+}
 
 static struct options {
 	const char *filename;
@@ -108,6 +149,8 @@ static int main_mkdir(const char *path, mode_t mode)
 	// For now only allow directory under root
 	if(path[0] != '/' || strchr(path + 1, '/') != NULL)
 			return -ENOENT;
+
+
 
 	return 0;
 }
