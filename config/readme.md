@@ -98,4 +98,4 @@ https://github.com/max397574/startup.nvim
 | `<leader>l`        | Normal          | Toggle relative line numbers               |
 | `<leader>rl`       | Normal          | Reload Neovim config and recompile plugins |
 | `<leader>t`        | Normal          | Toggle floating terminal                   |
-| `<Ctrl+\\>`        | Normal/Terminal | Toggle terminal (via toggleterm)           |
+| `<Ctrl+\>`        | Normal/Terminal | Toggle terminal (via toggleterm)           |
