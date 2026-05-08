@@ -54,11 +54,13 @@ require('packer').startup(function(use)
 
   use 
   { 
-	  "catppuccin/nvim", as = "catppuccin",
+	  "catppuccin/nvim", 
 	  config = function()
 		  require("catppuccin").setup({
-			  flavour = "mocha"
+			  flavour = "frappe"
 		  })
+
+		  vim.cmd.colorscheme "catppuccin"
 	  end
   }
   -- }}}
@@ -79,10 +81,23 @@ require('packer').startup(function(use)
   }
   -- }}}
 
-  -- neovim lsp {{{
+  -- lsp {{{
   use
   {
 	  'neovim/nvim-lspconfig'
+  }
+
+  use 
+  {
+  	"pmizio/typescript-tools.nvim",
+  	requires = { "nvim-lua/plenary.nvim" },
+  	config = function()
+    	require("typescript-tools").setup ({
+			settings = {
+				expose_as_code_action = "all"
+			},
+		})
+  	end,
   }
  -- }}}
   
@@ -133,7 +148,7 @@ vim.cmd("syntax on")
 
 -- Set color scheme
 --vim.cmd([[colorscheme monokai-pro]])
-vim.cmd.colorscheme "catppuccin"
+--vim.cmd.colorscheme "catppuccin"
 
 -- Line numbers
 vim.opt.number = true
@@ -158,8 +173,73 @@ vim.opt.fixendofline = false
 vim.opt.endofline = false
 
 -- LSP Config
-vim.lsp.enable('gh_actions_ls')
+--
+-- Define server configurations
+vim.lsp.config["lua_ls"] = {
+  cmd = { "lua-language-server" },
+  filetypes = { "lua" },
+  settings = {
+    Lua = {
+      diagnostics = { globals = { "vim" } },
+      workspace = { checkThirdParty = false },
+    },
+  },
+}
 
+vim.lsp.config["terraformls"] = {
+  cmd = { "terraform-ls", "serve" },
+  filetypes = { "terraform", "tf", "hcl" },
+}
+
+vim.lsp.config["gopls"] = {
+  cmd = { "gopls" },
+  filetypes = { "go", "gomod", "gowork", "gotmpl" },
+  root_markers = { "go.work", "go.mod", ".git" },
+  settings = {
+    gopls = {
+      analyses = {
+        unusedparams = true,
+      },
+      staticcheck = true,
+      gofumpt = true,
+    },
+  },
+}
+
+vim.lsp.config["yamlls"] = {
+  cmd = { "yaml-language-server", "--stdio" },
+  filetypes = { "yaml", "yml" },
+  settings = {
+    yaml = {
+      -- Set to true to enable automatic schema downloading 
+      schemaStore = {
+        enable = false,
+        url = "https://www.schemastore.org/api/json/catalog.json",
+      },
+      schemas = {
+        -- You can manually pin schemas here if auto-detection fails
+        -- ["https://json.schemastore.org/github-workflow.json"] = ".github/workflows/*",
+        -- ["kubernetes"] = "*.yaml",
+      },
+      format = { enable = false },
+      validate = true,
+      completion = true,
+      hover = true,
+    },
+  },
+}
+
+-- Diagnostic Customization
+vim.diagnostic.config({
+  virtual_text = true,     -- Show message at end of line
+  signs = true,            -- Show E/W/H in the gutter
+  underline = true,        -- Underline the actual code
+  update_in_insert = false, -- Don't yell at you while you're still typing
+  severity_sort = true,
+})
+
+-- Enable language servers
+vim.lsp.enable({ "lua_ls", "terraformls", "gopls", "yamlls" })
 -- }}}
 
 -- KEY MAPS {{{
@@ -173,6 +253,9 @@ vim.api.nvim_set_keymap("n", "<C-x><C-j>", [[:%s/[ \t]\([A-Za-z_].*\):/"\1":<CR>
 vim.keymap.set('n', '<leader>ff', "<cmd>lua require('telescope.builtin').find_files({ hidden = true })<CR>", { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>fg', "<cmd>lua require('telescope.builtin').live_grep()<CR>", { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>fb', "<cmd>lua require('telescope.builtin').buffers()<CR>", { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>lr', "<cmd> Telescope lsp_references<CR>", { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>gs', "<cmd> Telescope git_status<CR>", { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>of', "<cmd> Telescope oldfiles<CR>", { noremap = true, silent = true })
 -- }}} 
 --
 -- Toggle relative line numbers
@@ -200,5 +283,25 @@ vim.api.nvim_create_autocmd("TabNewEntered", {
 })
 
 -- }}}
+--
+--Map a key to see the error message clearly
+vim.keymap.set('n', '<leader>d', vim.diagnostic.open_float)
+-- Jump between errors
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
+-- Document symbols
+vim.keymap.set('n', '<leader>ds', vim.lsp.buf.document_symbol)
+--
+-- }}} 
+--
+-- COMMANDS {{{
+--
+-- Copy Relative buffer path
+vim.api.nvim_create_user_command('CopyBuffer', function()
+    vim.fn.setreg('+', vim.fn.expand('%')) end, {})
+--
+-- Copy Full buffer path
+vim.api.nvim_create_user_command('CopyBufferFP', function()
+    vim.fn.setreg('+', vim.fn.expand('%:p')) end, {})
 --
 -- }}}
