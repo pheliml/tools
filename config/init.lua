@@ -73,7 +73,7 @@ require('packer').startup(function(use)
   }
   require'nvim-treesitter.configs'.setup 
   {
-	  ensure_installed = { "java", "lua", "typescript", "go", "yaml", "terraform" },
+	  ensure_installed = { "java", "lua", "typescript", "go", "yaml", "terraform", "python" },
 	  highlight = {
 		  enable = true, -- Enable Treesitter-based highlighting
 		  additional_vim_regex_highlighting = false,  -- Disable traditional highlighting
@@ -129,6 +129,22 @@ require('packer').startup(function(use)
 	--	require("lualine").setup()
 	--end
   }
+-- }}}
+
+-- git-conflict {{{
+	use 
+	{
+		'akinsho/git-conflict.nvim', tag = "*", config = function()
+			require('git-conflict').setup({
+				default_commands = true,
+				list_opener = 'copen',
+				highlights = {
+					incoming = 'DiffAdd',
+					current = 'DiffText',
+				}
+			})
+		end
+	}
 -- }}}
 
   end
@@ -256,6 +272,8 @@ vim.keymap.set('n', '<leader>fb', "<cmd>lua require('telescope.builtin').buffers
 vim.keymap.set('n', '<leader>lr', "<cmd> Telescope lsp_references<CR>", { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>gs', "<cmd> Telescope git_status<CR>", { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>of', "<cmd> Telescope oldfiles<CR>", { noremap = true, silent = true })
+vim.keymap.set('n', 'grr', "<cmd>Telescope lsp_references<CR>", { noremap = true, silent = true })
+--vim.keymap.set('n', '<leader>d', "<cmd>Telescope lsp_definitions<CR>", { desc = 'Telescope: Go to Definition' })
 -- }}} 
 --
 -- Toggle relative line numbers
@@ -304,4 +322,22 @@ vim.api.nvim_create_user_command('CopyBuffer', function()
 vim.api.nvim_create_user_command('CopyBufferFP', function()
     vim.fn.setreg('+', vim.fn.expand('%:p')) end, {})
 --
+--
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "qf",
+  callback = function()
+    -- positioning
+    vim.cmd("wincmd H")              -- full-height vertical split on the right
+    vim.cmd("vertical resize 100")    -- width in columns
+
+    -- window-local options
+    vim.wo.number = true
+    vim.wo.relativenumber = false
+    vim.wo.wrap = false
+    vim.wo.winfixwidth = true        -- stop other splits from resizing it
+
+    -- buffer-local keymaps (optional)
+    vim.keymap.set("n", "q", "<cmd>cclose<CR>", { buffer = true, silent = true })
+  end,
+})
 -- }}}
