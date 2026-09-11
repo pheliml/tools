@@ -3,6 +3,8 @@
 -- zR open all folds
 -- zc/zo open/close fold under cursor
 
+--vim.g.go_gopls_enabled = 0
+
 -- Load packer
 vim.cmd [[packadd packer.nvim]]
 
@@ -15,7 +17,6 @@ require('packer').startup(function(use)
   use 
   {
 	  'ibhagwan/fzf-lua',
-	  requires = { 'nvim-tree/nvim-web-devicons' }
   }
   require('fzf-lua').setup
   {
@@ -45,19 +46,11 @@ require('packer').startup(function(use)
 
   -- colorschemes {{{
   use 
-  {
-	  "loctvl842/monokai-pro.nvim",
-	  config = function()
-		  require("monokai-pro").setup()
-	end
-  }
-
-  use 
   { 
 	  "catppuccin/nvim", 
 	  config = function()
 		  require("catppuccin").setup({
-			  flavour = "frappe"
+			  flavour = "mocha"
 		  })
 
 		  vim.cmd.colorscheme "catppuccin"
@@ -73,7 +66,7 @@ require('packer').startup(function(use)
   }
   require'nvim-treesitter.configs'.setup 
   {
-	  ensure_installed = { "java", "lua", "typescript", "go", "yaml", "terraform" },
+	  ensure_installed = { "java", "lua", "typescript", "go", "yaml", "terraform", "python" },
 	  highlight = {
 		  enable = true, -- Enable Treesitter-based highlighting
 		  additional_vim_regex_highlighting = false,  -- Disable traditional highlighting
@@ -91,6 +84,7 @@ require('packer').startup(function(use)
   {
   	"pmizio/typescript-tools.nvim",
   	requires = { "nvim-lua/plenary.nvim" },
+	ft = { "typescript", "javascript" },
   	config = function()
     	require("typescript-tools").setup ({
 			settings = {
@@ -121,14 +115,58 @@ require('packer').startup(function(use)
  -- }}}
 
 -- lualine.nvim {{{
-  use 
-  {
-    'nvim-lualine/lualine.nvim',
-    requires = { 'nvim-tree/nvim-web-devicons', opt = true }
-	 --config = function()
-	--	require("lualine").setup()
-	--end
-  }
+use
+{
+  'nvim-lualine/lualine.nvim',
+   requires = { 'nvim-tree/nvim-web-devicons', opt = true },
+   config = function()
+	   require("lualine").setup({
+		  options = {
+			  icons_enabled = false
+		  },
+		  sections = {
+			  lualine_a = {'mode'},
+    		  lualine_c = {'filename', 'buffers'},
+		  },
+	  })
+  end
+}
+-- }}}
+
+-- git-conflict {{{
+	use 
+	{
+		'akinsho/git-conflict.nvim', tag = "*", config = function()
+			require('git-conflict').setup({
+				default_commands = true,
+				list_opener = 'copen',
+				highlights = {
+					incoming = 'DiffAdd',
+					current = 'DiffText',
+				}
+			})
+		end
+	}
+-- }}}
+
+-- trouble.nvim {{{
+use {
+  'folke/trouble.nvim',
+  requires = { 'nvim-tree/nvim-web-devicons' },
+  config = function()
+    require('trouble').setup({
+		win = {
+			position = "right",
+			size = 200,
+		},
+    })
+
+    vim.keymap.set('n', '<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', { desc = 'Diagnostics (Trouble)' })
+    vim.keymap.set('n', '<leader>xq', '<cmd>Trouble qflist toggle<cr>', { desc = 'Quickfix List (Trouble)' })
+    vim.keymap.set('n', '<leader>xl', '<cmd>Trouble loclist toggle<cr>', { desc = 'Location List (Trouble)' })
+    vim.keymap.set('n', 'gR', '<cmd>Trouble lsp_references toggle<cr>', { desc = 'LSP References (Trouble)' })
+  end
+}
 -- }}}
 
   end
@@ -152,7 +190,7 @@ vim.cmd("syntax on")
 
 -- Line numbers
 vim.opt.number = true
-vim.opt.relativenumber = true
+vim.opt.relativenumber = false
 
 -- Viminfo options
 vim.opt.viminfo = "'100,<500,s10,h"
@@ -229,6 +267,22 @@ vim.lsp.config["yamlls"] = {
   },
 }
 
+vim.lsp.config["ts_ls"] = {
+  cmd = { "typescript-language-server", "--stdio" },
+  filetypes = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+  root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
+  settings = {
+    typescript = {
+      inlayHints = {
+        includeInlayParameterNameHints = "all",
+        includeInlayFunctionParameterTypeHints = true,
+        includeInlayVariableTypeHints = true,
+        includeInlayFunctionLikeReturnTypeHints = true,
+      },
+    },
+  },
+}
+
 -- Diagnostic Customization
 vim.diagnostic.config({
   virtual_text = true,     -- Show message at end of line
@@ -239,13 +293,14 @@ vim.diagnostic.config({
 })
 
 -- Enable language servers
-vim.lsp.enable({ "lua_ls", "terraformls", "gopls", "yamlls" })
+vim.lsp.enable({ "lua_ls", "gopls", "yamlls", "ts_ls" })
 -- }}}
 
 -- KEY MAPS {{{
 -- 
 -- Key mapping: Ctrl+x Ctrl+j to convert keys to JSON-style quoted strings
 vim.api.nvim_set_keymap("n", "<C-x><C-j>", [[:%s/[ \t]\([A-Za-z_].*\):/"\1":<CR>]], { noremap = true, silent = true })
+vim.keymap.set('t', '<Esc>', '<C-\\><C-n>')
 --
 -- Telescope {{{
 --vim.api.nvim_set_keymap('n', '<leader>ff', "<cmd>lua require('fzf-lua').files()<CR>", { noremap = true, silent = true })
@@ -256,6 +311,8 @@ vim.keymap.set('n', '<leader>fb', "<cmd>lua require('telescope.builtin').buffers
 vim.keymap.set('n', '<leader>lr', "<cmd> Telescope lsp_references<CR>", { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>gs', "<cmd> Telescope git_status<CR>", { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>of', "<cmd> Telescope oldfiles<CR>", { noremap = true, silent = true })
+vim.keymap.set('n', 'grr', "<cmd>Telescope lsp_references<CR>", { noremap = true, silent = true })
+--vim.keymap.set('n', '<leader>d', "<cmd>Telescope lsp_definitions<CR>", { desc = 'Telescope: Go to Definition' })
 -- }}} 
 --
 -- Toggle relative line numbers
@@ -292,6 +349,8 @@ vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
 -- Document symbols
 vim.keymap.set('n', '<leader>ds', vim.lsp.buf.document_symbol)
 --
+-- vim-go lsp find func callers
+vim.keymap.set('n', 'gc', '<cmd>GoCallers<CR>', { desc = 'Go: show callers' })
 -- }}} 
 --
 -- COMMANDS {{{
@@ -304,4 +363,22 @@ vim.api.nvim_create_user_command('CopyBuffer', function()
 vim.api.nvim_create_user_command('CopyBufferFP', function()
     vim.fn.setreg('+', vim.fn.expand('%:p')) end, {})
 --
+--
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "qf",
+  callback = function()
+    -- positioning
+    vim.cmd("wincmd L")              -- full-height vertical split on the right
+    vim.cmd("vertical resize 200")    -- width in columns
+
+    -- window-local options
+    vim.wo.number = true
+    vim.wo.relativenumber = false
+    vim.wo.wrap = false
+    vim.wo.winfixwidth = true        -- stop other splits from resizing it
+
+    -- buffer-local keymaps (optional)
+    vim.keymap.set("n", "q", "<cmd>cclose<CR>", { buffer = true, silent = true })
+  end,
+})
 -- }}}
